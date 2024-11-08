@@ -22,12 +22,98 @@ let PALABRAS_VALIDAS = new Set();
 
 // Llamar a la función cuando se carga la página
 document.addEventListener('DOMContentLoaded', async () => {
+    console.log('DOM cargado, iniciando juego...');
     await cargarPalabrasValidas();
+    initializeGame();
+});
+
+function initializeGame() {
+    console.log('Inicializando juego...');
+    
+    // Inicializar variables
+    gameStarted = false;
+    timeLeft = 60;
+    
+    // Obtener palabra y configurar juego
     PALABRA = obtenerPalabraAleatoria();
+    console.log('Palabra seleccionada:', PALABRA);
+    
+    // Inicializar componentes
     inicializarTablero();
     inicializarTeclado();
+    inicializarAyuda();
     cargarEstadisticas();
-});
+    
+    // Ocultar teclado inicialmente
+    const teclado = document.getElementById('teclado');
+    if (teclado) {
+        teclado.style.display = 'none';
+    }
+    
+    // Configurar botón de inicio
+    const startButton = document.getElementById('startButton');
+    if (startButton) {
+        startButton.addEventListener('click', startGame);
+        console.log('Evento click agregado al botón');
+    }
+}
+
+function startGame() {
+    if (gameStarted) return;
+    console.log('Iniciando juego...');
+    
+    gameStarted = true;
+    timeLeft = 60;
+    
+    const startButton = document.getElementById('startButton');
+    if (startButton) {
+        startButton.disabled = true;
+    }
+    
+    // Mostrar teclado
+    const teclado = document.getElementById('teclado');
+    if (teclado) {
+        teclado.style.display = 'flex';
+        console.log('Teclado mostrado');
+    }
+    
+    timer = setInterval(() => {
+        timeLeft--;
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        const timerElement = document.getElementById('timer');
+        if (timerElement) {
+            timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+        
+        if (timeLeft <= 0) {
+            endGame();
+        }
+    }, 1000);
+}
+
+function endGame() {
+    console.log('Finalizando juego...');
+    clearInterval(timer);
+    gameStarted = false;
+    
+    const startButton = document.getElementById('startButton');
+    if (startButton) {
+        startButton.disabled = false;
+    }
+    
+    const timerElement = document.getElementById('timer');
+    if (timerElement) {
+        timerElement.textContent = '1:00';
+    }
+    
+    // Ocultar teclado
+    const teclado = document.getElementById('teclado');
+    if (teclado) {
+        teclado.style.display = 'none';
+        console.log('Teclado ocultado');
+    }
+}
 
 function verificarPalabra(palabra) {
     const palabraUpperCase = palabra.toUpperCase();
@@ -228,18 +314,56 @@ function manejarInput(letra) {
     }
 }
 
-// Event listener para el teclado físico
-document.addEventListener('keydown', (event) => {
-    console.log('Tecla presionada:', event.key);
-    const key = event.key.toUpperCase();
+// Función principal para manejar todas las entradas
+function handleInput(key) {
+    if (!gameStarted) {
+        return false; // Asegurarse de que nada suceda si el juego no ha comenzado
+    }
     
     if (key === 'ENTER') {
-        manejarInput('ENTER');
-    } else if (key === 'BACKSPACE') {
+        handleEnter();
+    } else if (key === 'BACKSPACE' || key === '⌫') {
+        handleBackspace();
+    } else if (/^[A-Z]$/.test(key)) {
+        handleKeyPress(key);
+    }
+}
+
+// Evento para teclado físico
+document.addEventListener('keydown', (event) => {
+    if (!gameStarted) return;
+    
+    const key = event.key.toUpperCase();
+    console.log('Tecla presionada:', key);
+    
+    // Mapear la tecla Backspace a ⌫
+    if (key === 'BACKSPACE') {
         manejarInput('⌫');
-    } else if (/^[A-ZÑ]$/.test(key)) {
+        return;
+    }
+    
+    // Mapear la tecla Enter
+    if (key === 'ENTER') {
+        manejarInput('ENTER');
+        return;
+    }
+    
+    // Solo procesar letras válidas (incluyendo Ñ)
+    if (/^[A-ZÑ]$/.test(key)) {
         manejarInput(key);
     }
+});
+
+// Evento para teclado virtual
+document.querySelectorAll('.keyboard-row button').forEach(button => {
+    button.addEventListener('click', (e) => {
+        if (!gameStarted) {
+            e.preventDefault();
+            return;
+        }
+        const key = button.textContent;
+        handleInput(key === '⌫' ? 'BACKSPACE' : key);
+    });
 });
 
 function mostrarMensaje(mensaje, tipo = 'info') {
@@ -510,18 +634,54 @@ function mostrarAyuda() {
     }
 }
 
-// Asegurarnos de que el DOM está cargado antes de inicializar
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM cargado, iniciando juego...');
-    inicializarJuego();
+function handleKeyPress(key) {
+    if (!gameStarted) return;
+    
+    if (currentTile >= 5) return;
+    const tile = document.querySelector(`.tile[data-index="${currentRow}${currentTile}"]`);
+    if (!gameStarted || !tile) return; // Doble verificación
+    
+    tile.textContent = key;
+    tile.classList.add('filled');
+    currentTile++;
+}
+
+// Asegurarnos de que los eventos del teclado virtual también están bien protegidos
+document.querySelectorAll('.keyboard-row button').forEach(button => {
+    button.addEventListener('click', (e) => {
+        if (!gameStarted) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+        }
+        
+        const key = button.textContent;
+        if (gameStarted) { // Verificación adicional
+            handleInput(key === '⌫' ? 'BACKSPACE' : key);
+        }
+    });
 });
 
-function inicializarJuego() {
-    console.log('Inicializando juego...');
-    PALABRA = obtenerPalabraAleatoria();
-    console.log('Palabra seleccionada:', PALABRA);
+function handleBackspace() {
+    if (!gameStarted) return;
     
-    inicializarAyuda();
-    inicializarTablero();
-    inicializarTeclado();
+    if (currentTile > 0) {
+        currentTile--;
+        const tile = document.querySelector(`.tile[data-index="${currentRow}${currentTile}"]`);
+        tile.textContent = '';
+        tile.classList.remove('filled');
+    }
 }
+
+function handleEnter() {
+    if (!gameStarted) return;
+    
+    // ... resto del código de handleEnter ...
+}
+
+// Variables globales al inicio del archivo
+let gameStarted = false;
+let timer;
+let timeLeft = 60;
+let currentRow = 0;
+let currentTile = 0;

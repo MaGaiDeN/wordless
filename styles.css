@@ -263,44 +263,6 @@
     margin-top: 20px;
 }
 
-#titulo {
-    text-align: center;
-    font-size: 3.5rem;
-    margin: 20px 0 30px 0;
-    font-weight: 800;
-    color: #2c3e50;
-    text-transform: uppercase;
-    letter-spacing: 4px;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-    font-family: 'Arial Black', Helvetica, sans-serif;
-    background: linear-gradient(45deg, #2c3e50, #3498db);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    animation: titleGlow 2s ease-in-out infinite alternate;
-}
-
-@keyframes titleGlow {
-    from {
-        text-shadow: 0 0 10px rgba(52, 152, 219, 0.2),
-                     0 0 20px rgba(52, 152, 219, 0.2),
-                     0 0 30px rgba(52, 152, 219, 0.2);
-    }
-    to {
-        text-shadow: 0 0 20px rgba(52, 152, 219, 0.4),
-                     0 0 30px rgba(52, 152, 219, 0.4),
-                     0 0 40px rgba(52, 152, 219, 0.4);
-    }
-}
-
-/* Asegurarnos de que el título sea responsivo */
-@media (max-width: 600px) {
-    #titulo {
-        font-size: 2.5rem;
-        letter-spacing: 2px;
-    }
-}
-
 footer {
     text-align: center;
     padding: 20px;
@@ -373,4 +335,59 @@ footer a:hover {
         padding: 5px;
         font-size: 0.8rem;
     }
+}
+
+.game-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin: 10px 0;
+}
+
+.start-button {
+    padding: 8px 16px;
+    border-radius: 4px;
+    border: none;
+    background: linear-gradient(45deg, #2c3e50, #3498db);
+    color: white;
+    cursor: pointer;
+}
+
+.timer {
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+@media screen and (max-width: 768px) {
+    .game-controls {
+        gap: 10px;
+    }
+}
+
+#titulo {
+    background: linear-gradient(45deg, #2c3e50, #3498db);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: titleGlow 2s ease-in-out infinite alternate;
+    text-align: center;
+    margin: 20px 0;
+}
+
+@keyframes titleGlow {
+    from {
+        text-shadow: 0 0 10px rgba(52, 152, 219, 0.5);
+    }
+    to {
+        text-shadow: 0 0 20px rgba(52, 152, 219, 0.8);
+    }
+}
+
+.keyboard {
+    display: none;
+}
+
+.keyboard-visible {
+    display: flex !important;
 }
