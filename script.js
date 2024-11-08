@@ -64,6 +64,7 @@ function startGame() {
     
     gameStarted = true;
     timeLeft = 60;
+    finalizado = false;
     
     const startButton = document.getElementById('startButton');
     if (startButton) {
@@ -87,15 +88,16 @@ function startGame() {
         }
         
         if (timeLeft <= 0) {
-            endGame();
+            endGame(true);
         }
     }, 1000);
 }
 
-function endGame() {
+function endGame(timeOut = false) {
     console.log('Finalizando juego...');
     clearInterval(timer);
     gameStarted = false;
+    finalizado = true;
     
     const startButton = document.getElementById('startButton');
     if (startButton) {
@@ -112,6 +114,12 @@ function endGame() {
     if (teclado) {
         teclado.style.display = 'none';
         console.log('Teclado ocultado');
+    }
+
+    // Mostrar mensaje específico si se acabó el tiempo
+    if (timeOut) {
+        actualizarEstadisticas(false, 6);
+        mostrarMensaje(`¡Se acabó el tiempo! La palabra era: ${PALABRA} <button onclick="reiniciarJuego()">Jugar de nuevo</button>`, 'error');
     }
 }
 
