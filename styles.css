@@ -322,3 +322,55 @@ footer a:hover {
     width: 100%;
     margin: 0 auto;
 }
+
+/* Media Queries para dispositivos móviles */
+@media screen and (max-width: 768px) {
+    .container {
+        width: 95%;
+        padding: 10px;
+    }
+
+    .title {
+        font-size: 1.8rem;
+        margin: 15px 0;
+    }
+
+    .game-container {
+        grid-template-columns: repeat(5, minmax(45px, 1fr));
+        gap: 5px;
+    }
+
+    .tile {
+        font-size: 1.5rem;
+        height: 45px;
+    }
+
+    .keyboard-row button {
+        font-size: 0.9rem;
+        padding: 8px;
+        margin: 2px;
+    }
+
+    footer {
+        font-size: 0.8rem;
+        padding: 10px;
+    }
+}
+
+/* Para pantallas muy pequeñas */
+@media screen and (max-width: 350px) {
+    .game-container {
+        grid-template-columns: repeat(5, minmax(35px, 1fr));
+        gap: 3px;
+    }
+
+    .tile {
+        height: 35px;
+        font-size: 1.2rem;
+    }
+
+    .keyboard-row button {
+        padding: 5px;
+        font-size: 0.8rem;
+    }
+}
