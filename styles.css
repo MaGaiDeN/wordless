@@ -316,3 +316,9 @@ footer a {
 footer a:hover {
     text-decoration: underline;
 }
+
+.title, footer {
+    text-align: center;
+    width: 100%;
+    margin: 0 auto;
+}
