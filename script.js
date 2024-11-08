@@ -73,14 +73,80 @@ function startGame() {
         console.log('Botón comenzar ocultado');
     }
     
-    // Mostrar teclado
+    // Mostrar teclado virtual
     const teclado = document.getElementById('teclado');
     if (teclado) {
         teclado.style.display = 'flex';
         console.log('Teclado mostrado');
     }
     
+    // Crear y activar input móvil
+    crearInputMovil();
+    
     iniciarTimer();
+}
+
+function crearInputMovil() {
+    // Eliminar input anterior si existe
+    const inputAnterior = document.getElementById('inputMovil');
+    if (inputAnterior) {
+        inputAnterior.remove();
+    }
+    
+    // Crear nuevo input
+    const input = document.createElement('input');
+    input.id = 'inputMovil';
+    input.type = 'text';
+    input.maxLength = 1;
+    input.autocomplete = 'off';
+    input.spellcheck = false;
+    
+    // Estilos para ocultar el input pero mantenerlo funcional
+    const inputStyles = `
+        #inputMovil {
+            position: fixed;
+            opacity: 0;
+            pointer-events: none;
+            top: 0;
+            left: 0;
+            width: 1px;
+            height: 1px;
+            font-size: 16px; /* Previene zoom en iOS */
+        }
+    `;
+    
+    // Añadir estilos al style existente
+    style.textContent += inputStyles;
+    
+    // Manejar input
+    input.addEventListener('input', (e) => {
+        const valor = e.target.value.toUpperCase();
+        if (/^[A-ZÑ]$/.test(valor)) {
+            manejarInput(valor);
+        }
+        input.value = ''; // Limpiar para siguiente letra
+    });
+    
+    // Manejar backspace
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace') {
+            e.preventDefault();
+            manejarInput('⌫');
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            manejarInput('ENTER');
+        }
+    });
+    
+    document.body.appendChild(input);
+    
+    // Mantener el focus en el input
+    input.focus();
+    document.addEventListener('click', () => {
+        if (gameStarted && !finalizado) {
+            input.focus();
+        }
+    });
 }
 
 function iniciarTimer() {
@@ -588,10 +654,10 @@ function finalizarJuego(victoria) {
     finalizado = true;
     gameStarted = false;
 
-    // Ocultar teclado
-    const teclado = document.getElementById('teclado');
-    if (teclado) {
-        teclado.style.display = 'none';
+    // Eliminar input móvil
+    const inputMovil = document.getElementById('inputMovil');
+    if (inputMovil) {
+        inputMovil.remove();
     }
 
     // Mostrar mensaje final
@@ -650,6 +716,9 @@ function reiniciarJuego() {
     if (teclado) {
         teclado.style.display = 'flex';
     }
+    
+    // Recrear input móvil
+    crearInputMovil();
     
     // Iniciar nuevo timer
     iniciarTimer();
