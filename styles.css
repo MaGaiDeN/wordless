@@ -1,0 +1,173 @@
+.container {
+    text-align: center;
+    font-family: Arial, sans-serif;
+}
+
+#tablero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    margin: 20px 0;
+}
+
+.fila {
+    display: flex;
+    gap: 5px;
+}
+
+.casilla {
+    width: 50px;
+    height: 50px;
+    border: 2px solid #ccc;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5rem;
+    text-transform: uppercase;
+    transition: all 0.2s ease;
+}
+
+.casilla.revelada {
+    transform: rotateX(360deg);
+}
+
+.verde {
+    background-color: #6aaa64;
+    color: white;
+    border-color: #6aaa64;
+}
+
+.amarillo {
+    background-color: #c9b458;
+    color: white;
+    border-color: #c9b458;
+}
+
+.gris {
+    background-color: #787c7e;
+    color: white;
+    border-color: #787c7e;
+}
+
+#teclado {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    align-items: center;
+}
+
+.fila-teclado {
+    display: flex;
+    justify-content: center;
+    margin: 5px 0;
+}
+
+.tecla {
+    margin: 0 2px;
+    padding: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+    text-transform: uppercase;
+}
+
+.tecla:hover {
+    background-color: #eee;
+}
+
+.mensaje {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 10px 20px;
+    border-radius: 5px;
+    animation: fadeIn 0.3s ease-in-out;
+    z-index: 1000;
+}
+
+.mensaje-error {
+    background-color: #ff4444;
+    color: white;
+}
+
+.mensaje-info {
+    background-color: #2196F3;
+    color: white;
+}
+
+.mensaje-success {
+    background-color: #4CAF50;
+    color: white;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -20px);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
+}
+
+/* Añadir efecto de shake cuando la palabra no es válida */
+@keyframes shake {
+    0%, 100% { transform: translateX(-50%); }
+    10%, 30%, 50%, 70%, 90% { transform: translate(-52%); }
+    20%, 40%, 60%, 80% { transform: translate(-48%); }
+}
+
+.fila-error {
+    animation: shake 0.5s ease-in-out;
+}
+
+.mensaje button {
+    margin-left: 10px;
+    padding: 5px 10px;
+    border: none;
+    border-radius: 4px;
+    background-color: #4CAF50;
+    color: white;
+    cursor: pointer;
+}
+
+.mensaje button:hover {
+    background-color: #45a049;
+}
+
+/* Estilos para el modal de estadísticas */
+.estadisticas-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.2);
+}
+
+.distribucion-barra {
+    background: #787c7e;
+    height: 20px;
+    margin: 5px 0;
+    transition: width 0.3s ease;
+}
+
+.boton-rendirse {
+    margin: 10px auto;
+    padding: 8px 16px;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    display: block;
+}
+
+.boton-rendirse:hover {
+    background-color: #c82333;
+}
