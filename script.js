@@ -66,9 +66,11 @@ function startGame() {
     timeLeft = 60;
     finalizado = false;
     
+    // Ocultar el botón comenzar
     const startButton = document.getElementById('startButton');
     if (startButton) {
-        startButton.disabled = true;
+        startButton.style.display = 'none';
+        console.log('Botón comenzar ocultado');
     }
     
     // Mostrar teclado
@@ -78,18 +80,27 @@ function startGame() {
         console.log('Teclado mostrado');
     }
     
+    iniciarTimer();
+}
+
+function iniciarTimer() {
+    console.log('Iniciando timer');
+    timeLeft = 60;
+    const timerElement = document.getElementById('timer');
+    if (timerElement) {
+        timerElement.textContent = '1:00';
+    }
+    
     timer = setInterval(() => {
         timeLeft--;
         const minutes = Math.floor(timeLeft / 60);
         const seconds = timeLeft % 60;
-        const timerElement = document.getElementById('timer');
         if (timerElement) {
             timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
         }
         
         if (timeLeft <= 0) {
             console.log('Tiempo agotado');
-            clearInterval(timer);
             mostrarMensajeTimeOut();
         }
     }, 1000);
@@ -97,6 +108,8 @@ function startGame() {
 
 function mostrarMensajeTimeOut() {
     console.log('Mostrando mensaje de tiempo agotado');
+    clearInterval(timer);
+    
     const modalMensaje = document.createElement('div');
     modalMensaje.className = 'modal-mensaje';
     modalMensaje.innerHTML = `
@@ -108,7 +121,7 @@ function mostrarMensajeTimeOut() {
     `;
     document.body.appendChild(modalMensaje);
     
-    // Ocultar teclado y finalizar juego
+    // Ocultar teclado
     const teclado = document.getElementById('teclado');
     if (teclado) {
         teclado.style.display = 'none';
@@ -522,6 +535,10 @@ function contarPalabras() {
 
 function reiniciarJuego() {
     console.log('Reiniciando juego...');
+    
+    // Limpiar el timer anterior
+    clearInterval(timer);
+    
     // Eliminar el modal si existe
     const modalMensaje = document.querySelector('.modal-mensaje');
     if (modalMensaje) {
@@ -532,7 +549,11 @@ function reiniciarJuego() {
     intentoActual = 0;
     letraActual = 0;
     finalizado = false;
+    gameStarted = true;
+    
+    // Obtener nueva palabra
     PALABRA = obtenerPalabraAleatoria();
+    console.log('Nueva palabra seleccionada:', PALABRA);
     
     // Limpiar el tablero
     const casillas = document.querySelectorAll('.casilla');
@@ -547,7 +568,16 @@ function reiniciarJuego() {
         tecla.classList.remove('verde', 'amarillo', 'gris');
     });
     
-    console.log('Juego reiniciado');
+    // Mostrar teclado
+    const teclado = document.getElementById('teclado');
+    if (teclado) {
+        teclado.style.display = 'flex';
+    }
+    
+    // Iniciar nuevo timer
+    iniciarTimer();
+    
+    console.log('Juego reiniciado completamente');
 }
 
 function mostrarEstadisticas() {
