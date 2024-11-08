@@ -173,9 +173,65 @@ function endGame(timeOut = false) {
     actualizarEstadisticas(false, 6);
 }
 
-// Estilos actualizados para el mensaje
+// Unificar todos los estilos en una sola declaración al inicio
 const style = document.createElement('style');
 style.textContent = `
+    .modal-mensaje {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+
+    .modal-contenido {
+        background-color: #fff;
+        padding: 30px;
+        border-radius: 10px;
+        text-align: center;
+        max-width: 400px;
+        width: 90%;
+        box-shadow: 0 0 20px rgba(0,0,0,0.3);
+    }
+
+    .modal-contenido h2 {
+        color: #dc3545;
+        margin-bottom: 20px;
+        font-size: 1.5em;
+    }
+
+    .modal-contenido p {
+        color: #333;
+        margin-bottom: 20px;
+        font-size: 1.2em;
+    }
+
+    .modal-contenido strong {
+        color: #28a745;
+        font-size: 1.3em;
+        font-weight: bold;
+    }
+
+    .boton-reiniciar {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 5px;
+        font-size: 1.1em;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .boton-reiniciar:hover {
+        background-color: #0056b3;
+    }
+
     .mensaje {
         position: fixed;
         top: 50%;
@@ -186,42 +242,18 @@ style.textContent = `
         border-radius: 10px;
         box-shadow: 0 0 10px rgba(0,0,0,0.5);
     }
-    
-    .mensaje-final {
-        text-align: center;
-        padding: 20px;
-    }
-    
-    .mensaje-final p {
-        margin: 10px 0;
-        font-size: 1.2em;
-        color: white;
-    }
-    
-    .mensaje-final strong {
-        color: #ffc107;
-        font-size: 1.3em;
-    }
-    
-    .boton-reiniciar {
-        margin-top: 15px;
-        padding: 10px 20px;
-        font-size: 1.1em;
-        background-color: #28a745;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        transition: background-color 0.3s;
-    }
-    
-    .boton-reiniciar:hover {
-        background-color: #218838;
-    }
-    
+
     .tiempo-agotado {
         background-color: rgba(0, 0, 0, 0.9);
         color: white;
+    }
+
+    .keyboard.hidden {
+        display: none !important;
+    }
+
+    .keyboard:not(.hidden) {
+        display: flex;
     }
 `;
 document.head.appendChild(style);
@@ -495,89 +527,89 @@ function mostrarMensaje(mensaje, tipo = 'info') {
     document.body.appendChild(mensajeElement);
 }
 
+function obtenerIntentoActual() {
+    console.log('Obteniendo intento actual...');
+    let intento = '';
+    const filaCasillas = document.querySelectorAll(`.fila-${intentoActual} .casilla`);
+    
+    filaCasillas.forEach(casilla => {
+        intento += casilla.textContent;
+    });
+    
+    console.log('Intento obtenido:', intento);
+    return intento;
+}
+
 async function verificarIntento() {
     console.log('Verificando intento...');
     const intento = obtenerIntentoActual();
     
-    if (!verificarPalabra(intento)) {
+    if (intento.length !== LONGITUD) {
+        console.log('Intento incompleto');
+        mostrarMensaje('Palabra incompleta', 'error');
+        return;
+    }
+
+    if (!PALABRAS_VALIDAS.has(intento)) {
+        console.log('Palabra no válida:', intento);
         mostrarMensaje('Palabra no válida', 'error');
         return;
     }
 
+    console.log('Evaluando intento:', intento);
     const resultado = evaluarIntento(intento);
-    animarResultado(resultado);
+    
+    // Animar y mostrar el resultado
+    const casillas = document.querySelectorAll(`.fila-${intentoActual} .casilla`);
+    const teclas = document.querySelectorAll('.tecla');
+    
+    for (let i = 0; i < LONGITUD; i++) {
+        const letra = intento[i];
+        const casilla = casillas[i];
+        const color = resultado[i];
+        
+        // Animar casilla
+        setTimeout(() => {
+            casilla.classList.add(color);
+            
+            // Actualizar color de la tecla
+            teclas.forEach(tecla => {
+                if (tecla.textContent === letra) {
+                    if (color === 'verde') {
+                        tecla.className = 'tecla verde';
+                    } else if (color === 'amarillo' && !tecla.classList.contains('verde')) {
+                        tecla.className = 'tecla amarillo';
+                    } else if (!tecla.classList.contains('verde') && !tecla.classList.contains('amarillo')) {
+                        tecla.className = 'tecla gris';
+                    }
+                }
+            });
+        }, i * 100);
+    }
 
+    // Verificar si ganó
     if (intento === PALABRA) {
         setTimeout(() => {
-            actualizarEstadisticas(true, intentoActual + 1);
             mostrarMensajeVictoria();
+            actualizarEstadisticas(true, intentoActual + 1);
             finalizado = true;
-            endGame(false);
         }, LONGITUD * 100);
         return;
     }
 
-    // Verificar si se acabaron los intentos
+    // Verificar si perdió
     if (intentoActual === INTENTOS - 1) {
         setTimeout(() => {
-            endGame(false);
+            mostrarMensajeDerrota();
+            actualizarEstadisticas(false, 6);
+            finalizado = true;
         }, LONGITUD * 100);
         return;
     }
 
+    // Continuar al siguiente intento
     intentoActual++;
     letraActual = 0;
-}
-
-function contarPalabras() {
-    console.log(`Total de palabras disponibles: ${PALABRAS_VALIDAS.size}`);
-}
-
-function reiniciarJuego() {
-    console.log('Reiniciando juego...');
-    
-    // Limpiar el timer anterior
-    clearInterval(timer);
-    
-    // Eliminar el modal si existe
-    const modalMensaje = document.querySelector('.modal-mensaje');
-    if (modalMensaje) {
-        modalMensaje.remove();
-    }
-    
-    // Reiniciar variables
-    intentoActual = 0;
-    letraActual = 0;
-    finalizado = false;
-    gameStarted = true;
-    
-    // Obtener nueva palabra
-    PALABRA = obtenerPalabraAleatoria();
-    console.log('Nueva palabra seleccionada:', PALABRA);
-    
-    // Limpiar el tablero
-    const casillas = document.querySelectorAll('.casilla');
-    casillas.forEach(casilla => {
-        casilla.textContent = '';
-        casilla.className = 'casilla';
-    });
-    
-    // Limpiar los estilos del teclado
-    const teclas = document.querySelectorAll('.tecla');
-    teclas.forEach(tecla => {
-        tecla.classList.remove('verde', 'amarillo', 'gris');
-    });
-    
-    // Mostrar teclado
-    const teclado = document.getElementById('teclado');
-    if (teclado) {
-        teclado.style.display = 'flex';
-    }
-    
-    // Iniciar nuevo timer
-    iniciarTimer();
-    
-    console.log('Juego reiniciado completamente');
 }
 
 function mostrarEstadisticas() {
@@ -778,67 +810,6 @@ let timer;
 let timeLeft = 60;
 let currentRow = 0;
 let currentTile = 0;
-
-// Actualizar los estilos
-const style = document.createElement('style');
-style.textContent = `
-    .modal-mensaje {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.8);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 1000;
-    }
-
-    .modal-contenido {
-        background-color: #fff;
-        padding: 30px;
-        border-radius: 10px;
-        text-align: center;
-        max-width: 400px;
-        width: 90%;
-        box-shadow: 0 0 20px rgba(0,0,0,0.3);
-    }
-
-    .modal-contenido h2 {
-        color: #dc3545;
-        margin-bottom: 20px;
-        font-size: 1.5em;
-    }
-
-    .modal-contenido p {
-        color: #333;
-        margin-bottom: 20px;
-        font-size: 1.2em;
-    }
-
-    .modal-contenido strong {
-        color: #28a745;
-        font-size: 1.3em;
-        font-weight: bold;
-    }
-
-    .boton-reiniciar {
-        background-color: #007bff;
-        color: white;
-        border: none;
-        padding: 12px 24px;
-        border-radius: 5px;
-        font-size: 1.1em;
-        cursor: pointer;
-        transition: background-color 0.3s;
-    }
-
-    .boton-reiniciar:hover {
-        background-color: #0056b3;
-    }
-`;
-document.head.appendChild(style);
 
 function evaluarIntento(intento) {
     console.log('Evaluando intento:', intento, 'Palabra objetivo:', PALABRA);
