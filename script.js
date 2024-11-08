@@ -108,30 +108,7 @@ function iniciarTimer() {
 
 function mostrarMensajeTimeOut() {
     console.log('Mostrando mensaje de tiempo agotado');
-    clearInterval(timer);
-    
-    const modalMensaje = document.createElement('div');
-    modalMensaje.className = 'modal-mensaje';
-    modalMensaje.innerHTML = `
-        <div class="modal-contenido">
-            <h2>¡Se acabó el tiempo!</h2>
-            <p>La palabra era: <strong>${PALABRA}</strong></p>
-            <button onclick="reiniciarJuego()" class="boton-reiniciar">Jugar de nuevo</button>
-        </div>
-    `;
-    document.body.appendChild(modalMensaje);
-    
-    // Ocultar teclado
-    const teclado = document.getElementById('teclado');
-    if (teclado) {
-        teclado.style.display = 'none';
-    }
-    
-    gameStarted = false;
-    finalizado = true;
-    
-    // Actualizar estadísticas
-    actualizarEstadisticas(false, 6);
+    finalizarJuego(false);
 }
 
 function endGame(timeOut = false) {
@@ -232,20 +209,32 @@ style.textContent = `
         background-color: #0056b3;
     }
 
-    .mensaje {
+    .mensaje-temporal {
         position: fixed;
-        top: 50%;
+        top: 20%;
         left: 50%;
-        transform: translate(-50%, -50%);
+        transform: translateX(-50%);
+        padding: 10px 20px;
+        border-radius: 5px;
+        color: white;
+        font-weight: bold;
         z-index: 1000;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        animation: fadeInOut 2s ease-in-out;
     }
 
-    .tiempo-agotado {
-        background-color: rgba(0, 0, 0, 0.9);
-        color: white;
+    .mensaje-temporal.error {
+        background-color: rgba(220, 53, 69, 0.9);
+    }
+
+    .mensaje-temporal.info {
+        background-color: rgba(40, 167, 69, 0.9);
+    }
+
+    @keyframes fadeInOut {
+        0% { opacity: 0; }
+        10% { opacity: 1; }
+        90% { opacity: 1; }
+        100% { opacity: 0; }
     }
 
     .keyboard.hidden {
@@ -509,22 +498,29 @@ document.querySelectorAll('.keyboard-row button').forEach(button => {
     });
 });
 
-function mostrarMensaje(mensaje, tipo = 'info') {
-    console.log('Mostrando mensaje:', mensaje, tipo);
+function mostrarMensaje(texto, tipo = 'info') {
+    console.log('Mostrando mensaje:', texto, tipo);
     
     // Eliminar mensaje anterior si existe
-    const mensajeAnterior = document.querySelector('.mensaje');
+    const mensajeAnterior = document.querySelector('.mensaje-temporal');
     if (mensajeAnterior) {
         mensajeAnterior.remove();
     }
     
     // Crear nuevo mensaje
     const mensajeElement = document.createElement('div');
-    mensajeElement.className = `mensaje ${tipo}`;
-    mensajeElement.innerHTML = mensaje;
+    mensajeElement.className = `mensaje-temporal ${tipo}`;
+    mensajeElement.textContent = texto;
     
     // Insertar el mensaje en el DOM
     document.body.appendChild(mensajeElement);
+    
+    // Eliminar el mensaje después de 2 segundos
+    setTimeout(() => {
+        if (mensajeElement.parentNode) {
+            mensajeElement.remove();
+        }
+    }, 2000);
 }
 
 function obtenerIntentoActual() {
@@ -561,55 +557,104 @@ async function verificarIntento() {
     
     // Animar y mostrar el resultado
     const casillas = document.querySelectorAll(`.fila-${intentoActual} .casilla`);
-    const teclas = document.querySelectorAll('.tecla');
     
     for (let i = 0; i < LONGITUD; i++) {
         const letra = intento[i];
         const casilla = casillas[i];
         const color = resultado[i];
         
-        // Animar casilla
         setTimeout(() => {
             casilla.classList.add(color);
-            
-            // Actualizar color de la tecla
-            teclas.forEach(tecla => {
-                if (tecla.textContent === letra) {
-                    if (color === 'verde') {
-                        tecla.className = 'tecla verde';
-                    } else if (color === 'amarillo' && !tecla.classList.contains('verde')) {
-                        tecla.className = 'tecla amarillo';
-                    } else if (!tecla.classList.contains('verde') && !tecla.classList.contains('amarillo')) {
-                        tecla.className = 'tecla gris';
-                    }
-                }
-            });
+            actualizarColorTecla(letra, color);
         }, i * 100);
     }
 
-    // Verificar si ganó
-    if (intento === PALABRA) {
-        setTimeout(() => {
-            mostrarMensajeVictoria();
-            actualizarEstadisticas(true, intentoActual + 1);
-            finalizado = true;
-        }, LONGITUD * 100);
-        return;
+    // Verificar si ganó o perdió después de la animación
+    setTimeout(() => {
+        if (intento === PALABRA) {
+            finalizarJuego(true);
+        } else if (intentoActual === INTENTOS - 1) {
+            finalizarJuego(false);
+        } else {
+            intentoActual++;
+            letraActual = 0;
+        }
+    }, LONGITUD * 100);
+}
+
+function finalizarJuego(victoria) {
+    console.log('Finalizando juego, victoria:', victoria);
+    clearInterval(timer); // Detener el temporizador
+    finalizado = true;
+    gameStarted = false;
+
+    // Ocultar teclado
+    const teclado = document.getElementById('teclado');
+    if (teclado) {
+        teclado.style.display = 'none';
     }
 
-    // Verificar si perdió
-    if (intentoActual === INTENTOS - 1) {
-        setTimeout(() => {
-            mostrarMensajeDerrota();
-            actualizarEstadisticas(false, 6);
-            finalizado = true;
-        }, LONGITUD * 100);
-        return;
-    }
+    // Mostrar mensaje final
+    const modalMensaje = document.createElement('div');
+    modalMensaje.className = 'modal-mensaje';
+    modalMensaje.innerHTML = `
+        <div class="modal-contenido">
+            <h2>${victoria ? '¡Felicidades!' : '¡Juego terminado!'}</h2>
+            <p>La palabra era: <strong>${PALABRA}</strong></p>
+            <button onclick="reiniciarJuego()" class="boton-reiniciar">Jugar de nuevo</button>
+        </div>
+    `;
+    document.body.appendChild(modalMensaje);
 
-    // Continuar al siguiente intento
-    intentoActual++;
+    // Actualizar estadísticas
+    actualizarEstadisticas(victoria, intentoActual + 1);
+}
+
+function reiniciarJuego() {
+    console.log('Reiniciando juego...');
+    
+    // Limpiar el timer anterior
+    clearInterval(timer);
+    
+    // Eliminar el modal si existe
+    const modalMensaje = document.querySelector('.modal-mensaje');
+    if (modalMensaje) {
+        modalMensaje.remove();
+    }
+    
+    // Reiniciar variables
+    intentoActual = 0;
     letraActual = 0;
+    finalizado = false;
+    gameStarted = true;
+    
+    // Obtener nueva palabra
+    PALABRA = obtenerPalabraAleatoria();
+    console.log('Nueva palabra seleccionada:', PALABRA);
+    
+    // Limpiar el tablero
+    const casillas = document.querySelectorAll('.casilla');
+    casillas.forEach(casilla => {
+        casilla.textContent = '';
+        casilla.className = 'casilla';
+    });
+    
+    // Limpiar los estilos del teclado
+    const teclas = document.querySelectorAll('.tecla');
+    teclas.forEach(tecla => {
+        tecla.classList.remove('verde', 'amarillo', 'gris');
+    });
+    
+    // Mostrar teclado
+    const teclado = document.getElementById('teclado');
+    if (teclado) {
+        teclado.style.display = 'flex';
+    }
+    
+    // Iniciar nuevo timer
+    iniciarTimer();
+    
+    console.log('Juego reiniciado completamente');
 }
 
 function mostrarEstadisticas() {
@@ -865,4 +910,23 @@ function evaluarIntento(intento) {
     
     console.log('Resultado final:', resultado);
     return resultado;
+}
+
+function actualizarColorTecla(letra, color) {
+    console.log(`Actualizando color de tecla ${letra} a ${color}`);
+    const teclas = document.querySelectorAll('.tecla');
+    
+    teclas.forEach(tecla => {
+        if (tecla.textContent === letra) {
+            // Solo actualizar si el nuevo color es más prioritario
+            if (color === 'verde') {
+                tecla.className = 'tecla verde';
+            } else if (color === 'amarillo' && !tecla.classList.contains('verde')) {
+                tecla.className = 'tecla amarillo';
+            } else if (!tecla.classList.contains('verde') && 
+                       !tecla.classList.contains('amarillo')) {
+                tecla.className = 'tecla gris';
+            }
+        }
+    });
 }
