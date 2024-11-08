@@ -122,7 +122,7 @@ function inicializarTablero() {
 function inicializarTeclado() {
     console.log('Inicializando teclado...');
     const teclado = document.getElementById('teclado');
-    teclado.innerHTML = ''; // Limpiar teclado existente
+    teclado.innerHTML = '';
     
     const filas = [
         ['Q','W','E','R','T','Y','U','I','O','P'],
@@ -144,6 +144,25 @@ function inicializarTeclado() {
         });
         
         teclado.appendChild(filaTeclado);
+    });
+}
+
+function mostrarAyuda() {
+    const tooltip = document.querySelector('.tooltip');
+    tooltip.style.display = 'block';
+    
+    // Agregar listener para el botón de cerrar
+    const cerrarBtn = tooltip.querySelector('.cerrar-tooltip');
+    cerrarBtn.onclick = () => {
+        tooltip.style.display = 'none';
+    };
+    
+    // Cerrar al hacer clic fuera del tooltip
+    document.addEventListener('click', function cerrarTooltip(e) {
+        if (!tooltip.contains(e.target) && !document.querySelector('.ayuda-btn').contains(e.target)) {
+            tooltip.style.display = 'none';
+            document.removeEventListener('click', cerrarTooltip);
+        }
     });
 }
 
@@ -242,65 +261,20 @@ function mostrarMensaje(mensaje, tipo = 'info') {
 }
 
 async function verificarIntento() {
-    // Verificar que no estemos en un estado finalizado
-    if (finalizado) return;
-
     const casillas = document.querySelectorAll(`.fila-${intentoActual} .casilla`);
-    if (!casillas || casillas.length === 0) return;
-
     const palabraIntento = Array.from(casillas).map(casilla => casilla.textContent).join('');
     
-    // Verificar longitud
-    if (palabraIntento.length !== LONGITUD) {
-        mostrarMensaje('Palabra incompleta', 'error');
-        return;
-    }
-
-    // Verificar si la palabra existe
-    if (!DICCIONARIO.has(palabraIntento)) {
-        mostrarMensaje('Palabra no válida', 'error');
-        return;
-    }
-
-    // Procesar cada letra
-    for (let i = 0; i < LONGITUD; i++) {
-        const letra = palabraIntento[i];
-        const casilla = casillas[i];
-
-        if (!casilla) continue;
-
-        // Determinar el color
-        let color = 'gris';
-        if (letra === PALABRA[i]) {
-            color = 'verde';
-        } else if (PALABRA.includes(letra)) {
-            color = 'amarillo';
-        }
-
-        // Aplicar clase a la casilla
-        casilla.classList.add(color);
-
-        // Aplicar clase a la tecla si existe
-        const tecla = document.querySelector(`button[data-key="${letra}"]`);
-        if (tecla) {
-            if (color === 'verde') {
-                tecla.classList.remove('amarillo');
-                tecla.classList.add('verde');
-            } else if (color === 'amarillo' && !tecla.classList.contains('verde')) {
-                tecla.classList.add('amarillo');
-            } else if (color === 'gris' && !tecla.classList.contains('verde') && !tecla.classList.contains('amarillo')) {
-                tecla.classList.add('gris');
-            }
-        }
-
-        // Animación
-        setTimeout(() => {
-            casilla.classList.add('revelada');
-        }, i * 100);
-    }
-
-    // Verificar victoria o derrota
+    // Primero verificamos si es la palabra correcta
     if (palabraIntento === PALABRA) {
+        // Colorear las casillas
+        for (let i = 0; i < LONGITUD; i++) {
+            const casilla = casillas[i];
+            casilla.classList.add('verde');
+            setTimeout(() => {
+                casilla.classList.add('revelada');
+            }, i * 100);
+        }
+        
         setTimeout(() => {
             actualizarEstadisticas(true, intentoActual + 1);
             mostrarMensaje('¡Ganaste! <button onclick="reiniciarJuego()">Jugar de nuevo</button>', 'success');
@@ -309,6 +283,42 @@ async function verificarIntento() {
         return;
     }
 
+    // Si no es la palabra correcta, verificamos que sea una palabra válida
+    if (!DICCIONARIO.has(palabraIntento)) {
+        mostrarMensaje('Palabra no válida', 'error');
+        return;
+    }
+
+    // Resto de la lógica para colorear las casillas...
+    for (let i = 0; i < LONGITUD; i++) {
+        const letra = palabraIntento[i];
+        const casilla = casillas[i];
+        const tecla = document.querySelector(`button[data-key="${letra}"]`);
+        
+        if (letra === PALABRA[i]) {
+            casilla.classList.add('verde');
+            if (tecla) {
+                tecla.classList.remove('amarillo');
+                tecla.classList.add('verde');
+            }
+        } else if (PALABRA.includes(letra)) {
+            casilla.classList.add('amarillo');
+            if (tecla && !tecla.classList.contains('verde')) {
+                tecla.classList.add('amarillo');
+            }
+        } else {
+            casilla.classList.add('gris');
+            if (tecla) {
+                tecla.classList.add('gris');
+            }
+        }
+        
+        setTimeout(() => {
+            casilla.classList.add('revelada');
+        }, i * 100);
+    }
+
+    // Verificar si se acabaron los intentos
     if (intentoActual === INTENTOS - 1) {
         setTimeout(() => {
             actualizarEstadisticas(false, 6);
@@ -412,3 +422,106 @@ fetch('https://raw.githubusercontent.com/arturo-source/buscar-palabras-en-castel
     .then(data => {
         DICCIONARIO = new Set(data.split('\n').map(palabra => palabra.trim().toUpperCase()));
     });
+
+function inicializarAyuda() {
+    console.log('Inicializando ayuda...');
+    const ayudaContainer = document.getElementById('ayuda-container');
+    
+    // Crear el botón de ayuda
+    const ayudaBtn = document.createElement('button');
+    ayudaBtn.className = 'ayuda-btn';
+    ayudaBtn.innerHTML = '?';
+    ayudaBtn.onclick = mostrarAyuda;
+    
+    // Crear el tooltip
+    const tooltip = document.createElement('div');
+    tooltip.className = 'tooltip';
+    tooltip.style.display = 'none';
+    tooltip.innerHTML = `
+        <div class="tooltip-content">
+            <h3>Cómo jugar</h3>
+            <p>Adivina la palabra en 6 intentos o menos.</p>
+            <p>Cada intento debe ser una palabra válida de 5 letras.</p>
+            <p>Luego de cada intento, el color de los cuadros cambiarán para mostrar que tan cerca estás de acertar la palabra.</p>
+            
+            <h4>Ejemplos:</h4>
+            <div class="ejemplo">
+                <div class="ejemplo-fila">
+                    <div class="casilla">A</div>
+                    <div class="casilla verde">S</div>
+                    <div class="casilla">A</div>
+                    <div class="casilla">D</div>
+                    <div class="casilla">O</div>
+                </div>
+                <p>La letra S está en la palabra y en la posición correcta</p>
+            </div>
+            
+            <div class="ejemplo">
+                <div class="ejemplo-fila">
+                    <div class="casilla">C</div>
+                    <div class="casilla">E</div>
+                    <div class="casilla">B</div>
+                    <div class="casilla">A</div>
+                    <div class="casilla amarillo">R</div>
+                </div>
+                <p>La letra R está en la palabra, pero en la posición incorrecta</p>
+            </div>
+            
+            <div class="ejemplo">
+                <div class="ejemplo-fila">
+                    <div class="casilla">L</div>
+                    <div class="casilla">E</div>
+                    <div class="casilla gris">M</div>
+                    <div class="casilla">U</div>
+                    <div class="casilla">R</div>
+                </div>
+                <p>La letra M no se encuentra en la palabra</p>
+            </div>
+            
+            <button class="cerrar-tooltip" onclick="cerrarTooltip()">Entendido</button>
+        </div>
+    `;
+    
+    ayudaContainer.appendChild(ayudaBtn);
+    ayudaContainer.appendChild(tooltip);
+}
+
+// Agregar la función cerrarTooltip al scope global
+function cerrarTooltip() {
+    const tooltip = document.querySelector('.tooltip');
+    if (tooltip) {
+        tooltip.style.display = 'none';
+    }
+}
+
+// Modificar la función mostrarAyuda para alternar la visibilidad
+function mostrarAyuda() {
+    const tooltip = document.querySelector('.tooltip');
+    if (tooltip) {
+        tooltip.style.display = 'block';
+        
+        // Agregar event listener para cerrar al hacer clic fuera
+        document.addEventListener('click', function cerrarAlClickFuera(e) {
+            if (!tooltip.contains(e.target) && !document.querySelector('.ayuda-btn').contains(e.target)) {
+                tooltip.style.display = 'none';
+                document.removeEventListener('click', cerrarAlClickFuera);
+            }
+        });
+    }
+}
+
+// Asegurarnos de que el DOM está cargado antes de inicializar
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM cargado, iniciando juego...');
+    inicializarJuego();
+});
+
+function inicializarJuego() {
+    console.log('Inicializando juego...');
+    PALABRA = obtenerPalabraAleatoria();
+    console.log('Palabra seleccionada:', PALABRA);
+    
+    inicializarAyuda();
+    inicializarTablero();
+    inicializarTeclado();
+}

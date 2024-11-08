@@ -171,3 +171,148 @@
 .boton-rendirse:hover {
     background-color: #c82333;
 }
+
+#contenedor-principal {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 20px;
+    position: relative;
+}
+
+#ayuda-container {
+    text-align: left;
+    margin: 10px 0 20px 40px;
+    position: relative;
+    min-height: 30px;
+}
+
+.ayuda-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #666;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 1;
+}
+
+.ayuda-btn:hover {
+    background: #555;
+}
+
+.tooltip {
+    position: absolute;
+    top: calc(100% + 10px);
+    left: 0;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.2);
+    z-index: 1000;
+    width: 300px;
+}
+
+.tooltip-content {
+    text-align: left;
+}
+
+.tooltip h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+.ejemplo {
+    margin: 20px 0;
+}
+
+.ejemplo-fila {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 10px;
+}
+
+.ejemplo .casilla {
+    width: 30px;
+    height: 30px;
+    font-size: 16px;
+}
+
+.cerrar-tooltip {
+    margin-top: 20px;
+    padding: 8px 16px;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.cerrar-tooltip:hover {
+    background: #45a049;
+}
+
+/* Asegurarse de que el tablero tenga margen superior */
+#tablero {
+    margin-top: 20px;
+}
+
+#titulo {
+    text-align: center;
+    font-size: 3.5rem;
+    margin: 20px 0 30px 0;
+    font-weight: 800;
+    color: #2c3e50;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    font-family: 'Arial Black', Helvetica, sans-serif;
+    background: linear-gradient(45deg, #2c3e50, #3498db);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: titleGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes titleGlow {
+    from {
+        text-shadow: 0 0 10px rgba(52, 152, 219, 0.2),
+                     0 0 20px rgba(52, 152, 219, 0.2),
+                     0 0 30px rgba(52, 152, 219, 0.2);
+    }
+    to {
+        text-shadow: 0 0 20px rgba(52, 152, 219, 0.4),
+                     0 0 30px rgba(52, 152, 219, 0.4),
+                     0 0 40px rgba(52, 152, 219, 0.4);
+    }
+}
+
+/* Asegurarnos de que el título sea responsivo */
+@media (max-width: 600px) {
+    #titulo {
+        font-size: 2.5rem;
+        letter-spacing: 2px;
+    }
+}
+
+footer {
+    text-align: center;
+    padding: 20px;
+    margin-top: 40px;
+    color: #666;
+}
+
+footer a {
+    color: #1a73e8;
+    text-decoration: none;
+}
+
+footer a:hover {
+    text-decoration: underline;
+}
