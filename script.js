@@ -32,7 +32,7 @@ function initializeGame() {
     
     // Inicializar variables
     gameStarted = false;
-    timeLeft = 60;
+    timeLeft = 120;
     
     // Obtener palabra y configurar juego
     PALABRA = obtenerPalabraAleatoria();
@@ -63,7 +63,7 @@ function startGame() {
     console.log('Iniciando juego...');
     
     gameStarted = true;
-    timeLeft = 60;
+    timeLeft = 120;
     finalizado = false;
     
     // Ocultar el botón comenzar
@@ -73,7 +73,14 @@ function startGame() {
         console.log('Botón comenzar ocultado');
     }
     
-    // Mostrar teclado virtual
+    // Mostrar timer
+    const timerElement = document.getElementById('timer');
+    if (timerElement) {
+        timerElement.textContent = '2:00';
+        timerElement.classList.add('visible');
+    }
+    
+    // Mostrar teclado
     const teclado = document.getElementById('teclado');
     if (teclado) {
         teclado.style.display = 'flex';
@@ -151,10 +158,11 @@ function crearInputMovil() {
 
 function iniciarTimer() {
     console.log('Iniciando timer');
-    timeLeft = 60;
+    timeLeft = 120;
     const timerElement = document.getElementById('timer');
     if (timerElement) {
-        timerElement.textContent = '1:00';
+        timerElement.textContent = '2:00';
+        timerElement.classList.remove('warning');
     }
     
     timer = setInterval(() => {
@@ -163,6 +171,11 @@ function iniciarTimer() {
         const seconds = timeLeft % 60;
         if (timerElement) {
             timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            
+            // Añadir clase warning cuando quede poco tiempo (30 segundos)
+            if (timeLeft <= 30 && !timerElement.classList.contains('warning')) {
+                timerElement.classList.add('warning');
+            }
         }
         
         if (timeLeft <= 0) {
@@ -309,6 +322,43 @@ style.textContent = `
 
     .keyboard:not(.hidden) {
         display: flex;
+    }
+
+    #timer {
+        display: none;
+        font-family: 'Roboto Mono', monospace;
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #2c3e50;
+        background: linear-gradient(145deg, #f0f0f0, #ffffff);
+        padding: 15px 25px;
+        border-radius: 15px;
+        box-shadow: 5px 5px 15px rgba(0,0,0,0.1),
+                    -5px -5px 15px rgba(255,255,255,0.8);
+        margin: 20px auto;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+
+    #timer.visible {
+        display: inline-block;
+    }
+
+    #timer.warning {
+        color: #e74c3c;
+        animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.05);
+        }
+        100% {
+            transform: scale(1);
+        }
     }
 `;
 document.head.appendChild(style);
@@ -654,6 +704,12 @@ function finalizarJuego(victoria) {
     finalizado = true;
     gameStarted = false;
 
+    // Ocultar timer
+    const timerElement = document.getElementById('timer');
+    if (timerElement) {
+        timerElement.classList.remove('visible');
+    }
+
     // Eliminar input móvil
     const inputMovil = document.getElementById('inputMovil');
     if (inputMovil) {
@@ -679,6 +735,14 @@ function finalizarJuego(victoria) {
 function reiniciarJuego() {
     console.log('Reiniciando juego...');
     
+    // Mostrar timer con tiempo inicial
+    const timerElement = document.getElementById('timer');
+    if (timerElement) {
+        timerElement.style.display = 'inline-block';
+        timerElement.textContent = '2:00';
+        timerElement.classList.remove('warning');
+    }
+    
     // Limpiar el timer anterior
     clearInterval(timer);
     
@@ -693,6 +757,7 @@ function reiniciarJuego() {
     letraActual = 0;
     finalizado = false;
     gameStarted = true;
+    timeLeft = 120;
     
     // Obtener nueva palabra
     PALABRA = obtenerPalabraAleatoria();
@@ -999,3 +1064,123 @@ function actualizarColorTecla(letra, color) {
         }
     });
 }
+
+// Añadir estilos responsivos
+const responsiveStyles = `
+    @media (max-width: 768px) {
+        #juego {
+            width: 100%;
+            max-width: 100%;
+            padding: 10px;
+            margin: 0;
+        }
+
+        .tablero {
+            width: 100%;
+            max-width: 350px;
+            margin: 10px auto;
+        }
+
+        .fila {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin: 5px 0;
+        }
+
+        .casilla {
+            width: calc(20% - 10px);
+            height: 45px;
+            font-size: 1.5rem;
+            border-radius: 8px;
+        }
+
+        #teclado {
+            width: 100%;
+            max-width: 500px;
+            margin: 10px auto;
+            padding: 5px;
+        }
+
+        .fila-teclado {
+            display: flex;
+            justify-content: center;
+            gap: 3px;
+            margin: 3px 0;
+        }
+
+        .tecla {
+            min-width: 25px;
+            height: 45px;
+            font-size: 1rem;
+            margin: 2px;
+            padding: 5px;
+            border-radius: 5px;
+        }
+
+        #timer {
+            font-size: 2rem;
+            padding: 10px 20px;
+            margin: 15px auto;
+        }
+
+        .modal-contenido {
+            width: 85%;
+            max-width: 300px;
+            padding: 20px;
+            margin: 10px;
+        }
+
+        .mensaje-temporal {
+            width: 80%;
+            font-size: 0.9rem;
+            padding: 8px 16px;
+        }
+
+        /* Ajustes para evitar desbordamiento */
+        body {
+            overflow-x: hidden;
+            margin: 0;
+            padding: 10px;
+        }
+
+        /* Ajustes para el header */
+        header {
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin: 5px 0;
+        }
+
+        /* Ajustes para el footer */
+        footer {
+            padding: 10px;
+            font-size: 0.8rem;
+        }
+    }
+
+    /* Ajustes específicos para pantallas muy pequeñas */
+    @media (max-width: 320px) {
+        .casilla {
+            height: 40px;
+            font-size: 1.3rem;
+        }
+
+        .tecla {
+            height: 40px;
+            font-size: 0.9rem;
+            padding: 3px;
+        }
+
+        #timer {
+            font-size: 1.8rem;
+            padding: 8px 16px;
+        }
+    }
+`;
+
+// Añadir los estilos responsivos a los existentes
+style.textContent += responsiveStyles;
