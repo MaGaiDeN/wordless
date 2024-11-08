@@ -265,13 +265,24 @@
 
 footer {
     text-align: center;
-    padding: 20px;
-    margin-top: 40px;
-    color: #666;
+    padding: 20px 0;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+}
+
+footer p {
+    margin: 0;
+    color: #6c757d;
+    font-size: 0.9rem;
 }
 
 footer a {
-    color: #1a73e8;
+    color: #007bff;
     text-decoration: none;
 }
 

@@ -88,9 +88,37 @@ function startGame() {
         }
         
         if (timeLeft <= 0) {
-            endGame(true);
+            console.log('Tiempo agotado');
+            clearInterval(timer);
+            mostrarMensajeTimeOut();
         }
     }, 1000);
+}
+
+function mostrarMensajeTimeOut() {
+    console.log('Mostrando mensaje de tiempo agotado');
+    const modalMensaje = document.createElement('div');
+    modalMensaje.className = 'modal-mensaje';
+    modalMensaje.innerHTML = `
+        <div class="modal-contenido">
+            <h2>¡Se acabó el tiempo!</h2>
+            <p>La palabra era: <strong>${PALABRA}</strong></p>
+            <button onclick="reiniciarJuego()" class="boton-reiniciar">Jugar de nuevo</button>
+        </div>
+    `;
+    document.body.appendChild(modalMensaje);
+    
+    // Ocultar teclado y finalizar juego
+    const teclado = document.getElementById('teclado');
+    if (teclado) {
+        teclado.style.display = 'none';
+    }
+    
+    gameStarted = false;
+    finalizado = true;
+    
+    // Actualizar estadísticas
+    actualizarEstadisticas(false, 6);
 }
 
 function endGame(timeOut = false) {
@@ -116,12 +144,74 @@ function endGame(timeOut = false) {
         console.log('Teclado ocultado');
     }
 
-    // Mostrar mensaje específico si se acabó el tiempo
-    if (timeOut) {
-        actualizarEstadisticas(false, 6);
-        mostrarMensaje(`¡Se acabó el tiempo! La palabra era: ${PALABRA} <button onclick="reiniciarJuego()">Jugar de nuevo</button>`, 'error');
-    }
+    // Crear el mensaje modal
+    const modalMensaje = document.createElement('div');
+    modalMensaje.className = 'modal-mensaje';
+    modalMensaje.innerHTML = `
+        <div class="modal-contenido">
+            <h2>${timeOut ? '¡Se acabó el tiempo!' : '¡Juego terminado!'}</h2>
+            <p>La palabra era: <strong>${PALABRA}</strong></p>
+            <button onclick="reiniciarJuego()" class="boton-reiniciar">Jugar de nuevo</button>
+        </div>
+    `;
+    document.body.appendChild(modalMensaje);
+
+    // Actualizar estadísticas
+    actualizarEstadisticas(false, 6);
 }
+
+// Estilos actualizados para el mensaje
+const style = document.createElement('style');
+style.textContent = `
+    .mensaje {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1000;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+    
+    .mensaje-final {
+        text-align: center;
+        padding: 20px;
+    }
+    
+    .mensaje-final p {
+        margin: 10px 0;
+        font-size: 1.2em;
+        color: white;
+    }
+    
+    .mensaje-final strong {
+        color: #ffc107;
+        font-size: 1.3em;
+    }
+    
+    .boton-reiniciar {
+        margin-top: 15px;
+        padding: 10px 20px;
+        font-size: 1.1em;
+        background-color: #28a745;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    
+    .boton-reiniciar:hover {
+        background-color: #218838;
+    }
+    
+    .tiempo-agotado {
+        background-color: rgba(0, 0, 0, 0.9);
+        color: white;
+    }
+`;
+document.head.appendChild(style);
 
 function verificarPalabra(palabra) {
     const palabraUpperCase = palabra.toUpperCase();
@@ -375,87 +465,49 @@ document.querySelectorAll('.keyboard-row button').forEach(button => {
 });
 
 function mostrarMensaje(mensaje, tipo = 'info') {
+    console.log('Mostrando mensaje:', mensaje, tipo);
+    
+    // Eliminar mensaje anterior si existe
     const mensajeAnterior = document.querySelector('.mensaje');
     if (mensajeAnterior) {
         mensajeAnterior.remove();
     }
-
-    const mensajeElement = document.createElement('div');
-    mensajeElement.className = `mensaje mensaje-${tipo}`;
-    mensajeElement.innerHTML = mensaje;
-    document.body.appendChild(mensajeElement);
     
-    if (tipo === 'error' && !mensaje.includes('Juego terminado')) {
-        setTimeout(() => {
-            mensajeElement.remove();
-        }, 2000);
-    }
+    // Crear nuevo mensaje
+    const mensajeElement = document.createElement('div');
+    mensajeElement.className = `mensaje ${tipo}`;
+    mensajeElement.innerHTML = mensaje;
+    
+    // Insertar el mensaje en el DOM
+    document.body.appendChild(mensajeElement);
 }
 
 async function verificarIntento() {
-    const casillas = document.querySelectorAll(`.fila-${intentoActual} .casilla`);
-    const palabraIntento = Array.from(casillas).map(casilla => casilla.textContent).join('');
+    console.log('Verificando intento...');
+    const intento = obtenerIntentoActual();
     
-    // Primero verificamos si es la palabra correcta
-    if (palabraIntento === PALABRA) {
-        // Colorear las casillas
-        for (let i = 0; i < LONGITUD; i++) {
-            const casilla = casillas[i];
-            casilla.classList.add('verde');
-            setTimeout(() => {
-                casilla.classList.add('revelada');
-            }, i * 100);
-        }
-        
-        setTimeout(() => {
-            actualizarEstadisticas(true, intentoActual + 1);
-            mostrarMensaje('¡Ganaste! <button onclick="reiniciarJuego()">Jugar de nuevo</button>', 'success');
-            finalizado = true;
-        }, LONGITUD * 100);
-        return;
-    }
-
-    // Si no es la palabra correcta, verificamos que sea una palabra válida
-    if (!DICCIONARIO.has(palabraIntento)) {
+    if (!verificarPalabra(intento)) {
         mostrarMensaje('Palabra no válida', 'error');
         return;
     }
 
-    // Resto de la lógica para colorear las casillas...
-    for (let i = 0; i < LONGITUD; i++) {
-        const letra = palabraIntento[i];
-        const casilla = casillas[i];
-        const tecla = document.querySelector(`button[data-key="${letra}"]`);
-        
-        if (letra === PALABRA[i]) {
-            casilla.classList.add('verde');
-            if (tecla) {
-                tecla.classList.remove('amarillo');
-                tecla.classList.add('verde');
-            }
-        } else if (PALABRA.includes(letra)) {
-            casilla.classList.add('amarillo');
-            if (tecla && !tecla.classList.contains('verde')) {
-                tecla.classList.add('amarillo');
-            }
-        } else {
-            casilla.classList.add('gris');
-            if (tecla) {
-                tecla.classList.add('gris');
-            }
-        }
-        
+    const resultado = evaluarIntento(intento);
+    animarResultado(resultado);
+
+    if (intento === PALABRA) {
         setTimeout(() => {
-            casilla.classList.add('revelada');
-        }, i * 100);
+            actualizarEstadisticas(true, intentoActual + 1);
+            mostrarMensajeVictoria();
+            finalizado = true;
+            endGame(false);
+        }, LONGITUD * 100);
+        return;
     }
 
     // Verificar si se acabaron los intentos
     if (intentoActual === INTENTOS - 1) {
         setTimeout(() => {
-            actualizarEstadisticas(false, 6);
-            mostrarMensaje(`¡Juego terminado! La palabra era: ${PALABRA} <button onclick="reiniciarJuego()">Jugar de nuevo</button>`, 'error');
-            finalizado = true;
+            endGame(false);
         }, LONGITUD * 100);
         return;
     }
@@ -469,6 +521,13 @@ function contarPalabras() {
 }
 
 function reiniciarJuego() {
+    console.log('Reiniciando juego...');
+    // Eliminar el modal si existe
+    const modalMensaje = document.querySelector('.modal-mensaje');
+    if (modalMensaje) {
+        modalMensaje.remove();
+    }
+    
     // Reiniciar variables
     intentoActual = 0;
     letraActual = 0;
@@ -488,11 +547,7 @@ function reiniciarJuego() {
         tecla.classList.remove('verde', 'amarillo', 'gris');
     });
     
-    // Limpiar el mensaje si existe
-    const mensajeAnterior = document.querySelector('.mensaje');
-    if (mensajeAnterior) {
-        mensajeAnterior.remove();
-    }
+    console.log('Juego reiniciado');
 }
 
 function mostrarEstadisticas() {
@@ -693,3 +748,120 @@ let timer;
 let timeLeft = 60;
 let currentRow = 0;
 let currentTile = 0;
+
+// Actualizar los estilos
+const style = document.createElement('style');
+style.textContent = `
+    .modal-mensaje {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+
+    .modal-contenido {
+        background-color: #fff;
+        padding: 30px;
+        border-radius: 10px;
+        text-align: center;
+        max-width: 400px;
+        width: 90%;
+        box-shadow: 0 0 20px rgba(0,0,0,0.3);
+    }
+
+    .modal-contenido h2 {
+        color: #dc3545;
+        margin-bottom: 20px;
+        font-size: 1.5em;
+    }
+
+    .modal-contenido p {
+        color: #333;
+        margin-bottom: 20px;
+        font-size: 1.2em;
+    }
+
+    .modal-contenido strong {
+        color: #28a745;
+        font-size: 1.3em;
+        font-weight: bold;
+    }
+
+    .boton-reiniciar {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 5px;
+        font-size: 1.1em;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .boton-reiniciar:hover {
+        background-color: #0056b3;
+    }
+`;
+document.head.appendChild(style);
+
+function evaluarIntento(intento) {
+    console.log('Evaluando intento:', intento, 'Palabra objetivo:', PALABRA);
+    const resultado = new Array(LONGITUD).fill('gris');
+    
+    // Crear un mapa de las letras en la palabra objetivo
+    const letrasObjetivo = new Map();
+    for (let i = 0; i < PALABRA.length; i++) {
+        const letra = PALABRA[i];
+        if (!letrasObjetivo.has(letra)) {
+            letrasObjetivo.set(letra, { total: 1, posiciones: [i] });
+        } else {
+            const info = letrasObjetivo.get(letra);
+            info.total++;
+            info.posiciones.push(i);
+        }
+    }
+    
+    console.log('Estado inicial:', Object.fromEntries(letrasObjetivo));
+    
+    // Primera pasada: marcar las letras en posición correcta (verde)
+    for (let i = 0; i < LONGITUD; i++) {
+        const letra = intento[i];
+        if (letra === PALABRA[i]) {
+            resultado[i] = 'verde';
+            const info = letrasObjetivo.get(letra);
+            info.total--;
+            info.posiciones = info.posiciones.filter(pos => pos !== i);
+            console.log(`Marcando verde: ${letra} en posición ${i}. Quedan: ${info.total}`);
+        }
+    }
+    
+    console.log('Después de verdes:', Object.fromEntries(letrasObjetivo));
+    
+    // Segunda pasada: marcar las letras en posición incorrecta (amarillo)
+    for (let i = 0; i < LONGITUD; i++) {
+        if (resultado[i] === 'gris') {
+            const letra = intento[i];
+            const info = letrasObjetivo.get(letra);
+            
+            if (info && info.total > 0) {
+                // Solo marcar como amarillo si:
+                // 1. Quedan ocurrencias disponibles
+                // 2. La letra no está ya en su posición correcta
+                resultado[i] = 'amarillo';
+                info.total--;
+                console.log(`Marcando amarillo: ${letra} en posición ${i}. Quedan: ${info.total}`);
+            } else {
+                console.log(`Marcando gris: ${letra} en posición ${i}. No disponible o no existe`);
+            }
+        }
+    }
+    
+    console.log('Resultado final:', resultado);
+    return resultado;
+}
